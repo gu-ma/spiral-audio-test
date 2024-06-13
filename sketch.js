@@ -8,6 +8,7 @@ let params;
 // Objects and samples
 let objs = [];
 let samples = [];
+let samplesList;
 
 // Range for the sound and the world
 let range = {};
@@ -36,7 +37,6 @@ class SoundObject {
   }
 
   update() {
-    // Update panner position
     this.panner.positionX.value = this._coords.x;
     this.panner.positionY.value = this._coords.y;
     this.panner.positionZ.value = this._coords.z;
@@ -65,6 +65,7 @@ function getCameraOrientation() {
   };
 }
 
+// Create an array of objects
 function createObjs(count, range, samples, autostart) {
   let objs = [];
   // Create a new array of objects
@@ -79,6 +80,29 @@ function createObjs(count, range, samples, autostart) {
   return objs;
 }
 
+// Load samples list
+async function loadSamplesList(filePath) {
+  try {
+    const response = await fetch(filePath);
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error loading JSON file:', error);
+  }
+}
+
+// Select samples
+function selectSamples(count, samplesList) {
+  // randomly select samples from array
+  let samples = [];
+  for (let i = 0; i < count; i++) {
+    const index = Math.floor(Math.random() * samplesList.length);
+    samples.push(samplesList[index]);
+  }
+  return samples;
+}
+
+// P5 functions
 function preload() {
   font = loadFont('./assets/inconsolata.ttf');
 }
@@ -95,25 +119,27 @@ function setup() {
     world: width,
   };
 
-  // Create an array of samples
-  samples = [
-    './assets/ambient/bass.mp3',
-    './assets/ambient/drum.mp3',
-    './assets/ambient/drum1.mp3',
-    './assets/ambient/drum2.mp3',
-    './assets/ambient/hithat.mp3',
-    './assets/ambient/synth.mp3',
-  ];
-
   // GUI
   gui = new dat.GUI();
   params = {
     playSounds: false,
-    objsCount: 6,
+    objsCount: 10,
   };
   gui.add(params, 'playSounds').onChange(toggleSound);
   // gui.add(params, 'objsCount', 0, 10).step(1);
-  objs = createObjs(params.objsCount, range.audio, samples, false);
+
+
+  // Create an array of samples
+  console.log('setup');
+  loadSamplesList('./assets/samples.json').then((data) => {
+    console.log(data);
+
+    samplesList = data;
+    samples = selectSamples(params.objsCount, samplesList['samples']);
+
+    // Create an array of objects
+    objs = createObjs(params.objsCount, range.audio, samples, false);
+  })
 }
 
 function draw() {
@@ -121,9 +147,6 @@ function draw() {
 
   // Enable orbiting with the mouse.
   orbitControl(1, 1, 0.3);
-
-  // Fix the camera at the center.
-  // cam.setPosition(0, 0, 0);
 
   // Draw center sphere
   noFill();
@@ -134,6 +157,10 @@ function draw() {
   // Draw outer sphere
   stroke(100, 100, 100);
   sphere(range.world * 2);
+
+  if (objs.length === 0) {
+    return;
+  }
 
   if (params.playSounds) {
     // Convert camera position to audio coordinates
