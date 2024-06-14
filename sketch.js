@@ -108,7 +108,7 @@ function selectSamples(count = 1, samplesList) {
   } while (prefix != 'Gitarre' && prefix != 'Klavier' && prefix != 'Weitere');
 
   // Randomly select the other samples
-  for (let i = 1; i < count; i++) {
+  while (samples.length < count) {
     const n = int(random(0, samplesList.length - 1));
     prefix = getSamplePrefix(samplesList[n]);
     if (prefix != 'Gitarre' && prefix != 'Klavier' && prefix != 'Weitere') {
@@ -131,7 +131,7 @@ function setup() {
 
   // Range for the sound and the world
   range = {
-    audio: 10,
+    audio: 15,
     world: width,
   };
 
@@ -151,6 +151,8 @@ function setup() {
 
     samplesList = data;
     samples = selectSamples(params.objsCount, samplesList['samples']);
+
+    console.log(samples)
 
     // Create an array of objects
     objs = createObjs(params.objsCount, range.audio, samples, false);
