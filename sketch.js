@@ -91,13 +91,29 @@ async function loadSamplesList(filePath) {
   }
 }
 
+function getSamplePrefix(samplePath) {
+  return samplePath.split('/').slice(-1)[0].split('_')[0];
+}
+
 // Select samples
-function selectSamples(count, samplesList) {
-  // randomly select samples from array
+function selectSamples(count = 1, samplesList) {
   let samples = [];
-  for (let i = 0; i < count; i++) {
-    const index = Math.floor(Math.random() * samplesList.length);
-    samples.push(samplesList[index]);
+
+  // Take only 1 Gitarre OR 1 Klavier OR 1 Weitere
+  let prefix = null;
+  do {
+    const n = int(random(0, samplesList.length - 1));
+    prefix = getSamplePrefix(samplesList[n]);
+    samples[0] = samplesList[n];
+  } while (prefix != 'Gitarre' && prefix != 'Klavier' && prefix != 'Weitere');
+
+  // Randomly select the other samples
+  for (let i = 1; i < count; i++) {
+    const n = int(random(0, samplesList.length - 1));
+    prefix = getSamplePrefix(samplesList[n]);
+    if (prefix != 'Gitarre' && prefix != 'Klavier' && prefix != 'Weitere') {
+      samples.push(samplesList[n]);
+    }
   }
   return samples;
 }
@@ -128,7 +144,6 @@ function setup() {
   gui.add(params, 'playSounds').onChange(toggleSound);
   // gui.add(params, 'objsCount', 0, 10).step(1);
 
-
   // Create an array of samples
   console.log('setup');
   loadSamplesList('./assets/samples.json').then((data) => {
@@ -139,7 +154,7 @@ function setup() {
 
     // Create an array of objects
     objs = createObjs(params.objsCount, range.audio, samples, false);
-  })
+  });
 }
 
 function draw() {
@@ -150,7 +165,7 @@ function draw() {
 
   // Draw center sphere
   noFill();
-  strokeWeight(.5);
+  strokeWeight(0.5);
   stroke(0, 255, 0);
   sphere(10);
 
