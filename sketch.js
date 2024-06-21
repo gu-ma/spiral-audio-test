@@ -1,3 +1,11 @@
+/*
+Notes:
+---
+The system only work for positive z values at the moment. When z is negative we would have to deal with camera orientation but it is not working for now. See the createObjs function.
+*/
+
+
+// P5 vars
 let font;
 let cam;
 
@@ -10,10 +18,7 @@ let objs = [];
 let samples = [];
 let samplesList;
 
-// Range for the sound and the world
-let range = {};
-
-// Sound objects
+// Sound objects Class
 class SoundObject {
   constructor(coords, url, autostart) {
     this._coords = coords;
@@ -51,12 +56,13 @@ class SoundObject {
   }
 }
 
-// Camera
+// Camera functions
 function setListenerOrientation(vector) {
   Tone.Listener.forwardX.value = vector.x;
   Tone.Listener.forwardY.value = vector.y;
   Tone.Listener.forwardZ.value = vector.z;
 }
+
 function getCameraOrientation() {
   return {
     x: cam.upX,
@@ -65,7 +71,7 @@ function getCameraOrientation() {
   };
 }
 
-// Create an array of objects
+// Create an array of objects at random positions
 function createObjs(count, range, samples, autostart) {
   let objs = [];
   // Create a new array of objects
@@ -91,6 +97,7 @@ async function loadSamplesList(filePath) {
   }
 }
 
+// Get prefix from sample path
 function getSamplePrefix(samplePath) {
   return samplePath.split('/').slice(-1)[0].split('_')[0];
 }
@@ -115,6 +122,7 @@ function selectSamples(count = 1, samplesList) {
       samples.push(samplesList[n]);
     }
   }
+
   return samples;
 }
 
@@ -137,25 +145,31 @@ function setup() {
 
   // GUI
   gui = new dat.GUI();
+
+  // All the parameters for the sketch
   params = {
     playSounds: false,
     objsCount: 10,
+    rangeAudio: 15,
+    rangeWorld: width,
   };
+
+  // Add the parameters to the GUI
   gui.add(params, 'playSounds').onChange(toggleSound);
+  gui.add(params, 'rangeAudio', 5, 20).step(0.1);
   // gui.add(params, 'objsCount', 0, 10).step(1);
 
   // Create an array of samples
-  console.log('setup');
   loadSamplesList('./assets/samples.json').then((data) => {
     console.log(data);
 
     samplesList = data;
     samples = selectSamples(params.objsCount, samplesList['samples']);
 
-    console.log(samples)
+    console.log(samples);
 
     // Create an array of objects
-    objs = createObjs(params.objsCount, range.audio, samples, false);
+    objs = createObjs(params.objsCount, rangeAudio, samples, false);
   });
 }
 
@@ -165,7 +179,7 @@ function draw() {
   // Enable orbiting with the mouse.
   orbitControl(1, 1, 0.3);
 
-  // Draw center sphere
+  // Draw a sphere at the center
   noFill();
   strokeWeight(0.5);
   stroke(0, 255, 0);
@@ -173,7 +187,7 @@ function draw() {
 
   // Draw outer sphere
   stroke(100, 100, 100);
-  sphere(range.world * 2);
+  sphere(rangeWorld * 2);
 
   if (objs.length === 0) {
     return;
@@ -181,9 +195,9 @@ function draw() {
 
   if (params.playSounds) {
     // Convert camera position to audio coordinates
-    let camX = map(cam.eyeX, 0, range.world, 0, range.audio);
-    let camY = map(cam.eyeY, 0, range.world, 0, range.audio);
-    let camZ = map(cam.eyeZ, 0, range.world, 0, range.audio);
+    let camX = map(cam.eyeX, 0, rangeWorld, 0, rangeAudio);
+    let camY = map(cam.eyeY, 0, rangeWorld, 0, rangeAudio);
+    let camZ = map(cam.eyeZ, 0, rangeWorld, 0, rangeAudio);
     // Update listener position
     Tone.Listener.positionX.value = camX;
     Tone.Listener.positionY.value = camY;
@@ -200,9 +214,9 @@ function draw() {
     let { x, y, z } = obj.coords;
 
     // Convert coordinates to world coordinates
-    x = map(x, 0, range.audio, 0, range.world);
-    y = map(y, 0, range.audio, 0, range.world);
-    z = map(z, 0, range.audio, 0, range.world);
+    x = map(x, 0, rangeAudio, 0, rangeWorld);
+    y = map(y, 0, rangeAudio, 0, rangeWorld);
+    z = map(z, 0, rangeAudio, 0, rangeWorld);
 
     // Draw the object
     push();
