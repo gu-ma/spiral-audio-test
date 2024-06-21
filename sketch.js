@@ -137,12 +137,6 @@ function setup() {
   cam = createCamera();
   cam.perspective(8);
 
-  // Range for the sound and the world
-  range = {
-    audio: 15,
-    world: width,
-  };
-
   // GUI
   gui = new dat.GUI();
 
@@ -156,7 +150,7 @@ function setup() {
 
   // Add the parameters to the GUI
   gui.add(params, 'playSounds').onChange(toggleSound);
-  gui.add(params, 'rangeAudio', 5, 20).step(0.1);
+  // gui.add(params, 'rangeAudio', 5, 20).step(0.1);
   // gui.add(params, 'objsCount', 0, 10).step(1);
 
   // Create an array of samples
@@ -169,7 +163,7 @@ function setup() {
     console.log(samples);
 
     // Create an array of objects
-    objs = createObjs(params.objsCount, rangeAudio, samples, false);
+    objs = createObjs(params.objsCount, params.rangeAudio, samples, false);
   });
 }
 
@@ -187,7 +181,7 @@ function draw() {
 
   // Draw outer sphere
   stroke(100, 100, 100);
-  sphere(rangeWorld * 2);
+  sphere(params.rangeWorld * 2);
 
   if (objs.length === 0) {
     return;
@@ -195,9 +189,9 @@ function draw() {
 
   if (params.playSounds) {
     // Convert camera position to audio coordinates
-    let camX = map(cam.eyeX, 0, rangeWorld, 0, rangeAudio);
-    let camY = map(cam.eyeY, 0, rangeWorld, 0, rangeAudio);
-    let camZ = map(cam.eyeZ, 0, rangeWorld, 0, rangeAudio);
+    let camX = map(cam.eyeX, 0, params.rangeWorld, 0, params.rangeAudio);
+    let camY = map(cam.eyeY, 0, params.rangeWorld, 0, params.rangeAudio);
+    let camZ = map(cam.eyeZ, 0, params.rangeWorld, 0, params.rangeAudio);
     // Update listener position
     Tone.Listener.positionX.value = camX;
     Tone.Listener.positionY.value = camY;
@@ -213,10 +207,10 @@ function draw() {
 
     let { x, y, z } = obj.coords;
 
-    // Convert coordinates to world coordinates
-    x = map(x, 0, rangeAudio, 0, rangeWorld);
-    y = map(y, 0, rangeAudio, 0, rangeWorld);
-    z = map(z, 0, rangeAudio, 0, rangeWorld);
+    // Convert audio coordinates to world coordinates
+    x = map(x, 0, params.rangeAudio, 0, params.rangeWorld);
+    y = map(y, 0, params.rangeAudio, 0, params.rangeWorld);
+    z = map(z, 0, params.rangeAudio, 0, params.rangeWorld);
 
     // Draw the object
     push();
